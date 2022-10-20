@@ -1,0 +1,18 @@
+server:
+  hostPort: ":6000"
+
+database:
+  driver: mysql
+  hostPort: :3306
+  username: root
+  password: root
+  database: belajar-microservice
+
+redis:
+  hostPort: :6379
+  username:
+  password:
+  dbNumber: 1
+
+jwt:
+  signingKey: asdasd

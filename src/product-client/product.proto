@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option go_package = "./proto";
+
+package proto;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+message Product {
+	int64 ID = 1;
+	string Name = 2;
+	string Description = 3;
+	int64 Price = 4;
+	google.protobuf.Timestamp CreatedAt = 5;
+	google.protobuf.Timestamp UpdatedAt = 6;
+}
+
+message ProductCreateReq {
+	string Name = 1;
+	string Description = 2;
+	int64 Price = 3;
+}
+
+message ProductUpdateReq {
+	int64 ID = 1;
+	string Name = 2;
+	string Description = 3;
+	int64 Price = 4;
+}
+
+message ProductID {
+	int64 ID = 1;
+}
+
+service ProductService {
+	rpc FindOneByID(ProductID) returns (Product);
+	rpc FindAll(google.protobuf.Empty) returns (stream Product);
+	rpc Create(ProductCreateReq) returns (Product);
+	rpc Update(ProductUpdateReq) returns (Product);
+	rpc Delete(ProductID) returns (google.protobuf.Empty);
+}
