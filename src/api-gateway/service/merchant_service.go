@@ -4,6 +4,7 @@ import (
 	"api-gateway/dto"
 	pb "api-gateway/proto"
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"go-micro.dev/v4/errors"
 	"io"
@@ -11,38 +12,70 @@ import (
 )
 
 type MerchantService interface {
-	FindOneByID(ctx context.Context, merchantID int) (dto.MerchantResponse, error)
+	FindOneByID(ctx context.Context, merchantID int) (dto.MerchantResponseWithProducts, error)
 	FindAll(ctx context.Context) ([]dto.MerchantResponse, error)
 	Create(ctx context.Context, request dto.MerchantCreateReq) (dto.MerchantResponse, error)
 	Update(ctx context.Context, request dto.MerchantUpdateReq) (dto.MerchantResponse, error)
 	Delete(ctx context.Context, merchantID int) error
 }
 
-func NewMerchantService(service pb.MerchantService) MerchantService {
+func NewMerchantService(
+	merchantService pb.MerchantService,
+	productService pb.ProductService,
+) MerchantService {
 	return &merchantServiceImpl{
-		MerchantRPC: service,
+		MerchantRPC: merchantService,
+		ProductRPC:  productService,
 	}
 }
 
 type merchantServiceImpl struct {
 	MerchantRPC pb.MerchantService
+	ProductRPC  pb.ProductService
 }
 
-func (service *merchantServiceImpl) FindOneByID(ctx context.Context, merchantID int) (dto.MerchantResponse, error) {
+func (service *merchantServiceImpl) FindOneByID(ctx context.Context, merchantID int) (dto.MerchantResponseWithProducts, error) {
 	merchant, err := service.MerchantRPC.FindOneByID(ctx, &pb.MerchantID{
 		ID: int64(merchantID),
 	})
 	if err != nil {
 		e := errors.FromError(err)
-		return dto.MerchantResponse{}, echo.NewHTTPError(int(e.GetCode()), e.GetDetail())
+		return dto.MerchantResponseWithProducts{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
-	return dto.MerchantResponse{
-		ID:        int(merchant.ID),
-		Name:      merchant.Name,
-		Email:     merchant.Email,
-		Password:  merchant.Password,
-		CreatedAt: dto.DateTime(merchant.CreatedAt.AsTime()),
-		UpdatedAt: dto.DateTime(merchant.UpdatedAt.AsTime()),
+	stream, err := service.ProductRPC.FindAllByMerchantID(ctx, &pb.MerchantID{ID: int64(merchantID)})
+	if err != nil {
+		e := errors.FromError(err)
+		return dto.MerchantResponseWithProducts{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("product: %s", e.GetDetail()))
+	}
+	productsResponse := make([]dto.ProductResponse, 0)
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return dto.MerchantResponseWithProducts{}, echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		productsResponse = append(productsResponse, dto.ProductResponse{
+			ID:          int(msg.ID),
+			MerchantID:  int(msg.MerchantID),
+			Name:        msg.Name,
+			Description: msg.Description,
+			Price:       int(msg.Price),
+			CreatedAt:   dto.DateTime(msg.CreatedAt.AsTime()),
+			UpdatedAt:   dto.DateTime(msg.UpdatedAt.AsTime()),
+		})
+	}
+	return dto.MerchantResponseWithProducts{
+		MerchantResponse: dto.MerchantResponse{
+			ID:        int(merchant.ID),
+			Name:      merchant.Name,
+			Email:     merchant.Email,
+			Password:  merchant.Password,
+			CreatedAt: dto.DateTime(merchant.CreatedAt.AsTime()),
+			UpdatedAt: dto.DateTime(merchant.UpdatedAt.AsTime()),
+		},
+		Products: productsResponse,
 	}, nil
 }
 
@@ -51,7 +84,7 @@ func (service *merchantServiceImpl) FindAll(ctx context.Context) ([]dto.Merchant
 	stream, err := service.MerchantRPC.FindAll(ctx, nil)
 	if err != nil {
 		e := errors.FromError(err)
-		return nil, echo.NewHTTPError(int(e.GetCode()), e.GetDetail())
+		return nil, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
 	for {
 		msg, err := stream.Recv()
@@ -81,7 +114,7 @@ func (service *merchantServiceImpl) Create(ctx context.Context, request dto.Merc
 	})
 	if err != nil {
 		e := errors.FromError(err)
-		return dto.MerchantResponse{}, echo.NewHTTPError(int(e.GetCode()), e.GetDetail())
+		return dto.MerchantResponse{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
 	return dto.MerchantResponse{
 		ID:        int(merchant.ID),
@@ -102,7 +135,7 @@ func (service *merchantServiceImpl) Update(ctx context.Context, request dto.Merc
 	})
 	if err != nil {
 		e := errors.FromError(err)
-		return dto.MerchantResponse{}, echo.NewHTTPError(int(e.GetCode()), e.GetDetail())
+		return dto.MerchantResponse{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
 	return dto.MerchantResponse{
 		ID:        int(merchant.ID),
@@ -115,10 +148,37 @@ func (service *merchantServiceImpl) Update(ctx context.Context, request dto.Merc
 }
 
 func (service *merchantServiceImpl) Delete(ctx context.Context, merchantID int) error {
-	_, err := service.MerchantRPC.Delete(ctx, &pb.MerchantID{ID: int64(merchantID)})
+	stream, err := service.ProductRPC.FindAllByMerchantID(ctx, &pb.MerchantID{ID: int64(merchantID)})
 	if err != nil {
 		e := errors.FromError(err)
-		return echo.NewHTTPError(int(e.GetCode()), e.GetDetail())
+		return echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("product: %s", e.GetDetail()))
+	}
+	productsResponse := make([]dto.ProductResponse, 0)
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		productsResponse = append(productsResponse, dto.ProductResponse{
+			ID:          int(msg.ID),
+			MerchantID:  int(msg.MerchantID),
+			Name:        msg.Name,
+			Description: msg.Description,
+			Price:       int(msg.Price),
+			CreatedAt:   dto.DateTime(msg.CreatedAt.AsTime()),
+			UpdatedAt:   dto.DateTime(msg.UpdatedAt.AsTime()),
+		})
+	}
+	if len(productsResponse) > 0 {
+		return echo.NewHTTPError(http.StatusConflict, "products in this merchant is exist")
+	}
+	_, err = service.MerchantRPC.Delete(ctx, &pb.MerchantID{ID: int64(merchantID)})
+	if err != nil {
+		e := errors.FromError(err)
+		return echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
 	return nil
 }

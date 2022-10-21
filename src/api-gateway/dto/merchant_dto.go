@@ -9,6 +9,11 @@ type MerchantResponse struct {
 	UpdatedAt DateTime `json:"updated_at"`
 }
 
+type MerchantResponseWithProducts struct {
+	MerchantResponse
+	Products []ProductResponse `json:"products"`
+}
+
 type MerchantCreateReq struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`

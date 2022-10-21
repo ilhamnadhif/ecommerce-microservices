@@ -25,8 +25,8 @@ func Route() *echo.Echo {
 	merchantRPCClient := pb.NewMerchantService(config.Config.Service[config.MerchantService].ServiceName, srv.Client())
 
 	// service
-	productService := service.NewProductService(productRPCClient)
-	merchantService := service.NewMerchantService(merchantRPCClient)
+	productService := service.NewProductService(productRPCClient, merchantRPCClient)
+	merchantService := service.NewMerchantService(merchantRPCClient, productRPCClient)
 
 	// handler
 	productHandler := handler.NewProductHandler(productService)
