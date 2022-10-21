@@ -1,5 +1,6 @@
 server:
-  hostPort: ":6000"
+  serviceName: customerservice
+  hostPort: :6000
 
 database:
   driver: mysql
@@ -13,6 +14,3 @@ redis:
   username:
   password:
   dbNumber: 1
-
-jwt:
-  signingKey: asdasd

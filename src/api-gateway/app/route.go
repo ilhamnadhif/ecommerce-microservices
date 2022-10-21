@@ -23,14 +23,17 @@ func Route() *echo.Echo {
 	// Create client
 	productRPCClient := pb.NewProductService(config.Config.Service[config.ProductService].ServiceName, srv.Client())
 	merchantRPCClient := pb.NewMerchantService(config.Config.Service[config.MerchantService].ServiceName, srv.Client())
+	authRPCClient := pb.NewAuthService(config.Config.Service[config.AuthService].ServiceName, srv.Client())
 
 	// service
 	productService := service.NewProductService(productRPCClient, merchantRPCClient)
 	merchantService := service.NewMerchantService(merchantRPCClient, productRPCClient)
+	authService := service.NewAuthService(authRPCClient)
 
 	// handler
 	productHandler := handler.NewProductHandler(productService)
 	merchantHandler := handler.NewMerchantHandler(merchantService)
+	authHandler := handler.NewAuthHandler(authService)
 
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.CustomHTTPErrorHandler
@@ -38,6 +41,11 @@ func Route() *echo.Echo {
 	e.Use(middleware2.Recover())
 
 	apiRouter := e.Group("/api")
+
+	authRouter := apiRouter.Group("/login")
+	authRouter.POST("/merchant", authHandler.LoginMerchant)
+	authRouter.POST("/customer", authHandler.LoginCustomer)
+
 	productRouter := apiRouter.Group("/products")
 	productRouter.GET("", productHandler.FindAll)
 	productRouter.GET("/:productID", productHandler.FindOneByID)

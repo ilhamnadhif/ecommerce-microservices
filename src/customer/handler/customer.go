@@ -6,13 +6,14 @@ import (
 	pb "customer/proto"
 	"customer/repository"
 	"errors"
+	"time"
+
+	errors2 "go-micro.dev/v4/errors"
+
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
-	"time"
 )
 
 func NewCustomerHandler(db *gorm.DB, customerRepository repository.CustomerRepository) CustomerServiceHandler {
@@ -32,9 +33,10 @@ func (service *CustomerServiceHandler) FindOneByID(ctx context.Context, id *pb.C
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	*customer = pb.Customer{
 		ID:        int64(customerResp.ID),
@@ -52,9 +54,10 @@ func (service *CustomerServiceHandler) FindOneByEmail(ctx context.Context, email
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	*customer = pb.Customer{
 		ID:        int64(customerResp.ID),
@@ -72,7 +75,7 @@ func (service *CustomerServiceHandler) FindAll(ctx context.Context, empty *empty
 	customers, err := service.CustomerRepository.FindAll(ctx, service.DB)
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	for _, customer := range customers {
 		customersResp := pb.Customer{
@@ -98,7 +101,7 @@ func (service *CustomerServiceHandler) Create(ctx context.Context, req *pb.Custo
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*customer = pb.Customer{
 		ID:        int64(customerResp.ID),
@@ -116,9 +119,10 @@ func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.Custo
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	customerResp, err := service.CustomerRepository.Update(ctx, service.DB, model.Customer{
 		ID:        int(req.ID),
@@ -130,7 +134,7 @@ func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.Custo
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*customer = pb.Customer{
 		ID:        int64(customerResp.ID),
@@ -148,14 +152,15 @@ func (service *CustomerServiceHandler) Delete(ctx context.Context, id *pb.Custom
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	err = service.CustomerRepository.Delete(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	return nil
 }

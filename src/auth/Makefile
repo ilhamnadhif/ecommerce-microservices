@@ -20,7 +20,7 @@ tidy:
 
 .PHONY: build
 build:
-	@go build -o customer *.go
+	@go build -o auth *.go
 
 .PHONY: test
 test:
@@ -28,4 +28,4 @@ test:
 
 .PHONY: docker
 docker:
-	@docker build -t customer:latest .
+	@docker build -t auth:latest .

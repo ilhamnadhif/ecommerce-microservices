@@ -1,11 +1,9 @@
 package main
 
 import (
-	"customer/app"
-	"customer/config"
-	"customer/handler"
-	pb "customer/proto"
-	"customer/repository"
+	"auth/config"
+	"auth/handler"
+	pb "auth/proto"
 	"fmt"
 	"os"
 	"time"
@@ -23,18 +21,13 @@ var (
 )
 
 func main() {
+	// init config
+	config.InitConfig()
+
 	// log
 	file, _ := os.OpenFile(fmt.Sprintf("logs/app_%s.log", time.Now().Format("2006_01_02")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	logrus.SetOutput(file)
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-
-	// init config
-	config.InitConfig()
-
-	//
-	db := app.InitGorm()
-	customerRepository := repository.NewCustomerRepository()
-	customerHandler := handler.NewCustomerHandler(db, customerRepository)
 
 	// Create service
 	srv := micro.NewService(
@@ -47,8 +40,14 @@ func main() {
 		micro.Address(config.Config.Server.HostPort),
 	)
 
+	// Create client
+	merchantRPCClient := pb.NewMerchantService(config.Config.Service[config.MerchantService].ServiceName, srv.Client())
+	customerRPCClient := pb.NewCustomerService(config.Config.Service[config.CustomerService].ServiceName, srv.Client())
+
+	authHandler := handler.NewAuthHandler(merchantRPCClient, customerRPCClient)
+
 	// Register handler
-	if err := pb.RegisterCustomerServiceHandler(srv.Server(), &customerHandler); err != nil {
+	if err := pb.RegisterAuthServiceHandler(srv.Server(), &authHandler); err != nil {
 		logger.Fatal(err)
 	}
 	// Run service

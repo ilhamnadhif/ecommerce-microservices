@@ -3,7 +3,9 @@ package app
 import (
 	"customer/config"
 	"customer/helper"
+	"customer/model"
 	"fmt"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -13,5 +15,6 @@ func InitGorm() *gorm.DB {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	helper.LogFatalIfError(err)
 
+	db.AutoMigrate(&model.Customer{})
 	return db
 }

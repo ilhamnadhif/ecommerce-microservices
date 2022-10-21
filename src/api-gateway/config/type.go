@@ -3,6 +3,7 @@ package config
 const (
 	ProductService  = "product"
 	MerchantService = "merchant"
+	AuthService     = "auth"
 )
 
 type (

@@ -8,3 +8,6 @@ service:
   merchant:
     serviceName: merchantservice
     hostPort: :6010
+  auth:
+    serviceName: authservice
+    hostPort: :6010

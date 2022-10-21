@@ -1,0 +1,21 @@
+server:
+  serviceName: authservice
+  hostPort: :6013
+
+service:
+  merchant:
+    serviceName: merchantservice
+    hostPort: :6010
+  product:
+    serviceName: customerservice
+    hostPort: :6010
+
+redis:
+  hostPort: :6379
+  username:
+  password:
+  dbNumber: 1
+
+jwt:
+  expiredIn: 1
+  signingKey: ilhamnadhif
