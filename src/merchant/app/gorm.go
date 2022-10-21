@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"merchant/config"
 	"merchant/helper"
+	"merchant/model"
 )
 
 func InitGorm() *gorm.DB {
@@ -13,5 +14,6 @@ func InitGorm() *gorm.DB {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	helper.LogFatalIfError(err)
 
+	db.AutoMigrate(&model.Merchant{})
 	return db
 }

@@ -5,3 +5,6 @@ service:
   product:
     serviceName: productservice
     hostPort: :6010
+  merchant:
+    serviceName: merchantservice
+    hostPort: :6010

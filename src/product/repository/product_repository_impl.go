@@ -30,6 +30,15 @@ func (repository *productRepositoryImpl) FindAll(ctx context.Context, db *gorm.D
 	return products, err
 }
 
+func (repository *productRepositoryImpl) FindAllByMerchantID(ctx context.Context, db *gorm.DB, merchantID int) ([]model.Product, error) {
+	var products []model.Product
+	err := db.WithContext(ctx).Find(&products, "merchant_id = ?", merchantID).Error
+	if err != nil {
+		return nil, err
+	}
+	return products, err
+}
+
 func (repository *productRepositoryImpl) Create(ctx context.Context, db *gorm.DB, request model.Product) (model.Product, error) {
 	err := db.WithContext(ctx).Create(&request).Error
 	if err != nil {

@@ -38,6 +38,7 @@ func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *proto
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
+		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
 		Description: productResp.Description,
 		Price:       int64(productResp.Price),
@@ -57,6 +58,28 @@ func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptyp
 	for _, product := range products {
 		productsResp := proto.Product{
 			ID:          int64(product.ID),
+			MerchantID:  int64(product.MerchantID),
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       int64(product.Price),
+			CreatedAt:   timestamppb.New(product.CreatedAt),
+			UpdatedAt:   timestamppb.New(product.UpdatedAt),
+		}
+		stream.Send(&productsResp)
+	}
+	return nil
+}
+
+func (service *ProductServiceHandler) FindAllByMerchantID(ctx context.Context, id *proto.MerchantID, stream proto.ProductService_FindAllByMerchantIDStream) error {
+	products, err := service.ProductRepository.FindAllByMerchantID(ctx, service.DB, int(id.ID))
+	if err != nil {
+		logrus.Error(err.Error())
+		return errors2.BadRequest("", err.Error())
+	}
+	for _, product := range products {
+		productsResp := proto.Product{
+			ID:          int64(product.ID),
+			MerchantID:  int64(product.MerchantID),
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       int64(product.Price),
@@ -70,6 +93,7 @@ func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptyp
 
 func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.ProductCreateReq, product *proto.Product) error {
 	productResp, err := service.ProductRepository.Create(ctx, service.DB, model.Product{
+		MerchantID:  int(req.MerchantID),
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       int(req.Price),
@@ -82,6 +106,7 @@ func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.Pro
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
+		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
 		Description: productResp.Description,
 		Price:       int64(productResp.Price),
@@ -103,6 +128,7 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 	}
 	productResp, err := service.ProductRepository.Update(ctx, service.DB, model.Product{
 		ID:          int(req.ID),
+		MerchantID:  findProduct.MerchantID,
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       int(req.Price),
@@ -115,6 +141,7 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
+		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
 		Description: productResp.Description,
 		Price:       int64(productResp.Price),

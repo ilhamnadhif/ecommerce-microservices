@@ -33,7 +33,9 @@ func (handler *productHandler) FindOneByID(c echo.Context) error {
 
 func (handler *productHandler) FindAll(c echo.Context) error {
 	ctx := c.Request().Context()
-	products, err := handler.ProductService.FindAll(ctx)
+	var merchantID int
+	echo.QueryParamsBinder(c).Int("merchant_id", &merchantID)
+	products, err := handler.ProductService.FindAll(ctx, merchantID)
 	if err != nil {
 		return err
 	}

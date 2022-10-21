@@ -40,6 +40,7 @@ func NewProductServiceEndpoints() []*api.Endpoint {
 type ProductService interface {
 	FindOneByID(ctx context.Context, in *ProductID, opts ...client.CallOption) (*Product, error)
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...client.CallOption) (ProductService_FindAllService, error)
+	FindAllByMerchantID(ctx context.Context, in *MerchantID, opts ...client.CallOption) (ProductService_FindAllByMerchantIDService, error)
 	Create(ctx context.Context, in *ProductCreateReq, opts ...client.CallOption) (*Product, error)
 	Update(ctx context.Context, in *ProductUpdateReq, opts ...client.CallOption) (*Product, error)
 	Delete(ctx context.Context, in *ProductID, opts ...client.CallOption) (*emptypb.Empty, error)
@@ -121,6 +122,60 @@ func (x *productServiceFindAll) Recv() (*Product, error) {
 	return m, nil
 }
 
+func (c *productService) FindAllByMerchantID(ctx context.Context, in *MerchantID, opts ...client.CallOption) (ProductService_FindAllByMerchantIDService, error) {
+	req := c.c.NewRequest(c.name, "ProductService.FindAllByMerchantID", &MerchantID{})
+	stream, err := c.c.Stream(ctx, req, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Send(in); err != nil {
+		return nil, err
+	}
+	return &productServiceFindAllByMerchantID{stream}, nil
+}
+
+type ProductService_FindAllByMerchantIDService interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	CloseSend() error
+	Close() error
+	Recv() (*Product, error)
+}
+
+type productServiceFindAllByMerchantID struct {
+	stream client.Stream
+}
+
+func (x *productServiceFindAllByMerchantID) CloseSend() error {
+	return x.stream.CloseSend()
+}
+
+func (x *productServiceFindAllByMerchantID) Close() error {
+	return x.stream.Close()
+}
+
+func (x *productServiceFindAllByMerchantID) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *productServiceFindAllByMerchantID) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *productServiceFindAllByMerchantID) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *productServiceFindAllByMerchantID) Recv() (*Product, error) {
+	m := new(Product)
+	err := x.stream.Recv(m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *productService) Create(ctx context.Context, in *ProductCreateReq, opts ...client.CallOption) (*Product, error) {
 	req := c.c.NewRequest(c.name, "ProductService.Create", in)
 	out := new(Product)
@@ -156,6 +211,7 @@ func (c *productService) Delete(ctx context.Context, in *ProductID, opts ...clie
 type ProductServiceHandler interface {
 	FindOneByID(context.Context, *ProductID, *Product) error
 	FindAll(context.Context, *emptypb.Empty, ProductService_FindAllStream) error
+	FindAllByMerchantID(context.Context, *MerchantID, ProductService_FindAllByMerchantIDStream) error
 	Create(context.Context, *ProductCreateReq, *Product) error
 	Update(context.Context, *ProductUpdateReq, *Product) error
 	Delete(context.Context, *ProductID, *emptypb.Empty) error
@@ -165,6 +221,7 @@ func RegisterProductServiceHandler(s server.Server, hdlr ProductServiceHandler, 
 	type productService interface {
 		FindOneByID(ctx context.Context, in *ProductID, out *Product) error
 		FindAll(ctx context.Context, stream server.Stream) error
+		FindAllByMerchantID(ctx context.Context, stream server.Stream) error
 		Create(ctx context.Context, in *ProductCreateReq, out *Product) error
 		Update(ctx context.Context, in *ProductUpdateReq, out *Product) error
 		Delete(ctx context.Context, in *ProductID, out *emptypb.Empty) error
@@ -221,6 +278,46 @@ func (x *productServiceFindAllStream) RecvMsg(m interface{}) error {
 }
 
 func (x *productServiceFindAllStream) Send(m *Product) error {
+	return x.stream.Send(m)
+}
+
+func (h *productServiceHandler) FindAllByMerchantID(ctx context.Context, stream server.Stream) error {
+	m := new(MerchantID)
+	if err := stream.Recv(m); err != nil {
+		return err
+	}
+	return h.ProductServiceHandler.FindAllByMerchantID(ctx, m, &productServiceFindAllByMerchantIDStream{stream})
+}
+
+type ProductService_FindAllByMerchantIDStream interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	Close() error
+	Send(*Product) error
+}
+
+type productServiceFindAllByMerchantIDStream struct {
+	stream server.Stream
+}
+
+func (x *productServiceFindAllByMerchantIDStream) Close() error {
+	return x.stream.Close()
+}
+
+func (x *productServiceFindAllByMerchantIDStream) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *productServiceFindAllByMerchantIDStream) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *productServiceFindAllByMerchantIDStream) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *productServiceFindAllByMerchantIDStream) Send(m *Product) error {
 	return x.stream.Send(m)
 }
 

@@ -2,6 +2,7 @@ package dto
 
 type ProductResponse struct {
 	ID          int      `json:"id"`
+	MerchantID  int      `json:"merchant_id"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Price       int      `json:"price"`
@@ -10,6 +11,7 @@ type ProductResponse struct {
 }
 
 type ProductCreateReq struct {
+	MerchantID  int    `json:"merchant_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`

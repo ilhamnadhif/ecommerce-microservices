@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	service = "productservice"
 	version = "latest"
 )
 
@@ -41,7 +40,7 @@ func main() {
 		micro.Client(grpcc.NewClient()),
 	)
 	srv.Init(
-		micro.Name(service),
+		micro.Name(config.Config.Server.ServiceName),
 		micro.Version(version),
 		micro.Address(config.Config.Server.HostPort),
 	)

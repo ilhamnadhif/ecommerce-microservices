@@ -4,6 +4,7 @@ import "time"
 
 type Product struct {
 	ID          int `gorm:"primaryKey"`
+	MerchantID  int
 	Name        string
 	Description string
 	Price       int

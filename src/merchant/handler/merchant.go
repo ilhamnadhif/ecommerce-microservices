@@ -3,14 +3,13 @@ package handler
 import (
 	"context"
 	"errors"
+	errors2 "go-micro.dev/v4/errors"
 	"merchant/model"
 	pb "merchant/proto"
 	"merchant/repository"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
@@ -33,9 +32,10 @@ func (service *MerchantServiceHandler) FindOneByID(ctx context.Context, id *pb.M
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
@@ -53,9 +53,10 @@ func (service *MerchantServiceHandler) FindOneByEmail(ctx context.Context, email
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
@@ -73,7 +74,7 @@ func (service *MerchantServiceHandler) FindAll(ctx context.Context, empty *empty
 	merchants, err := service.MerchantRepository.FindAll(ctx, service.DB)
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	for _, merchant := range merchants {
 		merchantsResp := pb.Merchant{
@@ -99,7 +100,7 @@ func (service *MerchantServiceHandler) Create(ctx context.Context, req *pb.Merch
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
@@ -117,9 +118,10 @@ func (service *MerchantServiceHandler) Update(ctx context.Context, req *pb.Merch
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	merchantResp, err := service.MerchantRepository.Update(ctx, service.DB, model.Merchant{
 		ID:        int(req.ID),
@@ -131,7 +133,7 @@ func (service *MerchantServiceHandler) Update(ctx context.Context, req *pb.Merch
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
@@ -149,14 +151,15 @@ func (service *MerchantServiceHandler) Delete(ctx context.Context, id *pb.Mercha
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	err = service.MerchantRepository.Delete(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	return nil
 }

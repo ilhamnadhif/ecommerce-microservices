@@ -1,4 +1,5 @@
 server:
+  serviceName: productservice
   hostPort: :6010
 
 database:
@@ -13,6 +14,3 @@ redis:
   username:
   password:
   dbNumber: 1
-
-jwt:
-  signingKey: asdasd

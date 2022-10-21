@@ -1,5 +1,10 @@
 package config
 
+const (
+	ProductService  = "product"
+	MerchantService = "merchant"
+)
+
 type (
 	Configuration struct {
 		Server  ServerConfig       `yaml:"server"`

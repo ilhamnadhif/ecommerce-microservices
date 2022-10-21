@@ -5,15 +5,11 @@ type (
 		Server   ServerConfig   `yaml:"server"`
 		Database DatabaseConfig `yaml:"database"`
 		Redis    RedisConfig    `yaml:"redis"`
-		Jwt      JwtConfig      `yaml:"jwt"`
 	}
 
 	ServerConfig struct {
-		HostPort string `yaml:"hostPort"`
-	}
-
-	JwtConfig struct {
-		SigningKey string `yaml:"signingKey"`
+		ServiceName string `yaml:"serviceName"`
+		HostPort    string `yaml:"hostPort"`
 	}
 
 	DatabaseConfig struct {
