@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	errors2 "go-micro.dev/v4/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
@@ -32,9 +31,10 @@ func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *proto
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
@@ -52,7 +52,7 @@ func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptyp
 	products, err := service.ProductRepository.FindAll(ctx, service.DB)
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	for _, product := range products {
 		productsResp := proto.Product{
@@ -78,7 +78,7 @@ func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.Pro
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
@@ -96,21 +96,22 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	productResp, err := service.ProductRepository.Update(ctx, service.DB, model.Product{
 		ID:          int(req.ID),
 		Name:        req.Name,
 		Description: req.Description,
-		Price:       int(req.ID),
+		Price:       int(req.Price),
 		CreatedAt:   findProduct.CreatedAt,
 		UpdatedAt:   time.Now(),
 	})
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	*product = proto.Product{
 		ID:          int64(productResp.ID),
@@ -128,14 +129,15 @@ func (service *ProductServiceHandler) Delete(ctx context.Context, id *proto.Prod
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Error(codes.NotFound, err.Error())
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
 		}
-		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	err = service.ProductRepository.Delete(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errors2.BadRequest("", err.Error())
 	}
 	return nil
 }

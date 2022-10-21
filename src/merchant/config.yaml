@@ -1,5 +1,5 @@
 server:
-  hostPort: :6010
+  hostPort: ":6000"
 
 database:
   driver: mysql

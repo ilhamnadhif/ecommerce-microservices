@@ -20,7 +20,7 @@ tidy:
 
 .PHONY: build
 build:
-	@go build -o product *.go
+	@go build -o api-gateway *.go
 
 .PHONY: test
 test:
@@ -28,4 +28,4 @@ test:
 
 .PHONY: docker
 docker:
-	@docker build -t product:latest .
+	@docker build -t api-gateway:latest .

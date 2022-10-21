@@ -15,6 +15,4 @@
 # vendor/
 
 # don't commit the service binary to vcs
-product
-
-.idea/
+merchant

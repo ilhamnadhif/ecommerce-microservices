@@ -1,0 +1,7 @@
+server:
+  hostPort: :6001
+
+service:
+  product:
+    serviceName: productservice
+    hostPort: :6010

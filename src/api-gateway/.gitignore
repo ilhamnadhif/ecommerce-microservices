@@ -15,6 +15,6 @@
 # vendor/
 
 # don't commit the service binary to vcs
-product
+api-gateway
 
 .idea/
