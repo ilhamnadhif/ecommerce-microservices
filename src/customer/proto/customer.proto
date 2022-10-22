@@ -27,6 +27,7 @@ message CustomerUpdateReq {
   string Name = 2;
   string Email = 3;
   string Password = 4;
+  QueryData Query = 5;
 }
 
 message CustomerID {
@@ -37,11 +38,26 @@ message CustomerEmail {
   string Email = 1;
 }
 
+message DeleteReq {
+  int64 ID = 1;
+  QueryData Query = 2;
+}
+
+enum Role{
+  MERCHANT = 0;
+  CUSTOMER = 1;
+}
+
+message QueryData {
+  int64 MerchantID = 1;
+  Role Role = 2 ;
+}
+
 service CustomerService {
   rpc FindOneByID(CustomerID) returns (Customer);
   rpc FindOneByEmail(CustomerEmail) returns (Customer);
   rpc FindAll(google.protobuf.Empty) returns (stream Customer);
   rpc Create(CustomerCreateReq) returns (Customer);
   rpc Update(CustomerUpdateReq) returns (Customer);
-  rpc Delete(CustomerID) returns (google.protobuf.Empty);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
 }

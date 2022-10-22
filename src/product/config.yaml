@@ -1,6 +1,6 @@
 server:
   serviceName: productservice
-  hostPort: :6010
+  hostPort: :6004
 
 database:
   driver: mysql

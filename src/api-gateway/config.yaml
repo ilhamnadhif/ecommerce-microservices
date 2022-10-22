@@ -4,10 +4,14 @@ server:
 service:
   product:
     serviceName: productservice
-    hostPort: :6010
+    hostPort: :6004
   merchant:
     serviceName: merchantservice
-    hostPort: :6010
-  auth:
-    serviceName: authservice
-    hostPort: :6010
+    hostPort: :6002
+  customer:
+    serviceName: customerservice
+    hostPort: :6003
+
+jwt:
+  expiredIn: 1
+  signingKey: ilhamnadhif

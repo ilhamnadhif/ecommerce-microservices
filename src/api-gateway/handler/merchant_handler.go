@@ -3,6 +3,7 @@ package handler
 import (
 	"api-gateway/dto"
 	"api-gateway/service"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -54,6 +55,8 @@ func (handler *merchantHandler) Create(c echo.Context) error {
 }
 func (handler *merchantHandler) Update(c echo.Context) error {
 	ctx := c.Request().Context()
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*dto.JWTCustomClaims)
 	merchantID, err := strconv.Atoi(c.Param("merchantID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -63,6 +66,8 @@ func (handler *merchantHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	req.ID = merchantID
+	req.QueryData.ID = int64(claims.ID)
+	req.Role = claims.Role
 	merchant, err := handler.MerchantService.Update(ctx, req)
 	if err != nil {
 		return err
@@ -72,11 +77,16 @@ func (handler *merchantHandler) Update(c echo.Context) error {
 
 func (handler *merchantHandler) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*dto.JWTCustomClaims)
 	merchantID, err := strconv.Atoi(c.Param("merchantID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	err = handler.MerchantService.Delete(ctx, merchantID)
+	err = handler.MerchantService.Delete(ctx, merchantID, dto.QueryData{
+		ID:   int64(claims.ID),
+		Role: claims.Role,
+	})
 	if err != nil {
 		return err
 	}

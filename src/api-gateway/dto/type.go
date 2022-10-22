@@ -1,9 +1,15 @@
 package dto
 
 import (
+	pb "api-gateway/proto"
 	"fmt"
 	"time"
 )
+
+type QueryData struct {
+	ID   int64
+	Role pb.Role
+}
 
 type DateTime time.Time
 

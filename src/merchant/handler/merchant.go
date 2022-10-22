@@ -114,6 +114,12 @@ func (service *MerchantServiceHandler) Create(ctx context.Context, req *pb.Merch
 }
 
 func (service *MerchantServiceHandler) Update(ctx context.Context, req *pb.MerchantUpdateReq, merchant *pb.Merchant) error {
+	if req.Query.Role != pb.Role_MERCHANT {
+		return errors2.Forbidden("", "access denied for this role")
+	}
+	if req.ID != req.Query.MerchantID {
+		return errors2.Forbidden("", "access denied for this account merchant")
+	}
 	findMerchant, err := service.MerchantRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -146,8 +152,14 @@ func (service *MerchantServiceHandler) Update(ctx context.Context, req *pb.Merch
 	return nil
 }
 
-func (service *MerchantServiceHandler) Delete(ctx context.Context, id *pb.MerchantID, empty *emptypb.Empty) error {
-	_, err := service.MerchantRepository.FindOneByID(ctx, service.DB, int(id.ID))
+func (service *MerchantServiceHandler) Delete(ctx context.Context, req *pb.DeleteReq, empty *emptypb.Empty) error {
+	if req.Query.Role != pb.Role_MERCHANT {
+		return errors2.Forbidden("", "access denied for this role")
+	}
+	if req.ID != req.Query.MerchantID {
+		return errors2.Forbidden("", "access denied for this account merchant")
+	}
+	_, err := service.MerchantRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -156,7 +168,7 @@ func (service *MerchantServiceHandler) Delete(ctx context.Context, id *pb.Mercha
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	err = service.MerchantRepository.Delete(ctx, service.DB, int(id.ID))
+	err = service.MerchantRepository.Delete(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())

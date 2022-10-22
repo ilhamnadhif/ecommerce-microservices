@@ -2,6 +2,7 @@ package app
 
 import (
 	"api-gateway/config"
+	"api-gateway/dto"
 	"api-gateway/handler"
 	"api-gateway/middleware"
 	pb "api-gateway/proto"
@@ -23,18 +24,22 @@ func Route() *echo.Echo {
 	// Create client
 	productRPCClient := pb.NewProductService(config.Config.Service[config.ProductService].ServiceName, srv.Client())
 	merchantRPCClient := pb.NewMerchantService(config.Config.Service[config.MerchantService].ServiceName, srv.Client())
-	authRPCClient := pb.NewAuthService(config.Config.Service[config.AuthService].ServiceName, srv.Client())
+	customerRPCClient := pb.NewCustomerService(config.Config.Service[config.CustomerService].ServiceName, srv.Client())
 
 	// service
 	productService := service.NewProductService(productRPCClient, merchantRPCClient)
 	merchantService := service.NewMerchantService(merchantRPCClient, productRPCClient)
-	authService := service.NewAuthService(authRPCClient)
+	authService := service.NewAuthService(merchantRPCClient, customerRPCClient)
 
 	// handler
 	productHandler := handler.NewProductHandler(productService)
 	merchantHandler := handler.NewMerchantHandler(merchantService)
 	authHandler := handler.NewAuthHandler(authService)
 
+	config := middleware2.JWTConfig{
+		Claims:     &dto.JWTCustomClaims{},
+		SigningKey: []byte(config.Config.Jwt.SigningKey),
+	}
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.CustomHTTPErrorHandler
 	e.Use(middleware2.CORS())
@@ -45,6 +50,8 @@ func Route() *echo.Echo {
 	authRouter := apiRouter.Group("/login")
 	authRouter.POST("/merchant", authHandler.LoginMerchant)
 	authRouter.POST("/customer", authHandler.LoginCustomer)
+
+	apiRouter.Use(middleware2.JWTWithConfig(config))
 
 	productRouter := apiRouter.Group("/products")
 	productRouter.GET("", productHandler.FindAll)

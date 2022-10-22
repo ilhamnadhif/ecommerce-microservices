@@ -43,7 +43,7 @@ type CustomerService interface {
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...client.CallOption) (CustomerService_FindAllService, error)
 	Create(ctx context.Context, in *CustomerCreateReq, opts ...client.CallOption) (*Customer, error)
 	Update(ctx context.Context, in *CustomerUpdateReq, opts ...client.CallOption) (*Customer, error)
-	Delete(ctx context.Context, in *CustomerID, opts ...client.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error)
 }
 
 type customerService struct {
@@ -152,7 +152,7 @@ func (c *customerService) Update(ctx context.Context, in *CustomerUpdateReq, opt
 	return out, nil
 }
 
-func (c *customerService) Delete(ctx context.Context, in *CustomerID, opts ...client.CallOption) (*emptypb.Empty, error) {
+func (c *customerService) Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error) {
 	req := c.c.NewRequest(c.name, "CustomerService.Delete", in)
 	out := new(emptypb.Empty)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -170,7 +170,7 @@ type CustomerServiceHandler interface {
 	FindAll(context.Context, *emptypb.Empty, CustomerService_FindAllStream) error
 	Create(context.Context, *CustomerCreateReq, *Customer) error
 	Update(context.Context, *CustomerUpdateReq, *Customer) error
-	Delete(context.Context, *CustomerID, *emptypb.Empty) error
+	Delete(context.Context, *DeleteReq, *emptypb.Empty) error
 }
 
 func RegisterCustomerServiceHandler(s server.Server, hdlr CustomerServiceHandler, opts ...server.HandlerOption) error {
@@ -180,7 +180,7 @@ func RegisterCustomerServiceHandler(s server.Server, hdlr CustomerServiceHandler
 		FindAll(ctx context.Context, stream server.Stream) error
 		Create(ctx context.Context, in *CustomerCreateReq, out *Customer) error
 		Update(ctx context.Context, in *CustomerUpdateReq, out *Customer) error
-		Delete(ctx context.Context, in *CustomerID, out *emptypb.Empty) error
+		Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error
 	}
 	type CustomerService struct {
 		customerService
@@ -249,6 +249,6 @@ func (h *customerServiceHandler) Update(ctx context.Context, in *CustomerUpdateR
 	return h.CustomerServiceHandler.Update(ctx, in, out)
 }
 
-func (h *customerServiceHandler) Delete(ctx context.Context, in *CustomerID, out *emptypb.Empty) error {
+func (h *customerServiceHandler) Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error {
 	return h.CustomerServiceHandler.Delete(ctx, in, out)
 }

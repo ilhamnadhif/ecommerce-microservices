@@ -3,13 +3,14 @@ package config
 const (
 	ProductService  = "product"
 	MerchantService = "merchant"
-	AuthService     = "auth"
+	CustomerService = "customer"
 )
 
 type (
 	Configuration struct {
 		Server  ServerConfig       `yaml:"server"`
 		Service map[string]Service `yaml:"service"`
+		Jwt     JwtConfig          `yaml:"jwt"`
 	}
 
 	Service struct {
@@ -19,5 +20,10 @@ type (
 
 	ServerConfig struct {
 		HostPort string `yaml:"hostPort"`
+	}
+
+	JwtConfig struct {
+		ExpiredIn  int    `yaml:"expiredIn"`
+		SigningKey string `yaml:"signingKey"`
 	}
 )

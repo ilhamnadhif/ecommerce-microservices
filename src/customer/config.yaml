@@ -1,6 +1,6 @@
 server:
   serviceName: customerservice
-  hostPort: :6000
+  hostPort: :6003
 
 database:
   driver: mysql

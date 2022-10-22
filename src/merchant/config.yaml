@@ -1,6 +1,6 @@
 server:
   serviceName: merchantservice
-  hostPort: :6000
+  hostPort: :6002
 
 database:
   driver: mysql

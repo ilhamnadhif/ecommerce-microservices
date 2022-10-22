@@ -16,7 +16,7 @@ type MerchantService interface {
 	FindAll(ctx context.Context) ([]dto.MerchantResponse, error)
 	Create(ctx context.Context, request dto.MerchantCreateReq) (dto.MerchantResponse, error)
 	Update(ctx context.Context, request dto.MerchantUpdateReq) (dto.MerchantResponse, error)
-	Delete(ctx context.Context, merchantID int) error
+	Delete(ctx context.Context, merchantID int, queryData dto.QueryData) error
 }
 
 func NewMerchantService(
@@ -132,6 +132,10 @@ func (service *merchantServiceImpl) Update(ctx context.Context, request dto.Merc
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: request.Password,
+		Query: &pb.QueryData{
+			MerchantID: request.QueryData.ID,
+			Role:       request.QueryData.Role,
+		},
 	})
 	if err != nil {
 		e := errors.FromError(err)
@@ -147,7 +151,7 @@ func (service *merchantServiceImpl) Update(ctx context.Context, request dto.Merc
 	}, nil
 }
 
-func (service *merchantServiceImpl) Delete(ctx context.Context, merchantID int) error {
+func (service *merchantServiceImpl) Delete(ctx context.Context, merchantID int, queryData dto.QueryData) error {
 	stream, err := service.ProductRPC.FindAllByMerchantID(ctx, &pb.MerchantID{ID: int64(merchantID)})
 	if err != nil {
 		e := errors.FromError(err)
@@ -175,7 +179,13 @@ func (service *merchantServiceImpl) Delete(ctx context.Context, merchantID int) 
 	if len(productsResponse) > 0 {
 		return echo.NewHTTPError(http.StatusConflict, "products in this merchant is exist")
 	}
-	_, err = service.MerchantRPC.Delete(ctx, &pb.MerchantID{ID: int64(merchantID)})
+	_, err = service.MerchantRPC.Delete(ctx, &pb.DeleteReq{
+		ID: int64(merchantID),
+		Query: &pb.QueryData{
+			MerchantID: queryData.ID,
+			Role:       queryData.Role,
+		},
+	})
 	if err != nil {
 		e := errors.FromError(err)
 		return echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))

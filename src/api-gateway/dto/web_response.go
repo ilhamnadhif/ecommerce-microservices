@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/golang-jwt/jwt"
 	"net/http"
 )
 
@@ -17,10 +16,4 @@ func WebResponseSuccess(data interface{}) WebResponse {
 		Status: http.StatusText(http.StatusOK),
 		Data:   data,
 	}
-}
-
-type JWTCustomClaims struct {
-	FullName string `json:"full_name"`
-	Email    string `json:"email"`
-	jwt.StandardClaims
 }

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 	"product/model"
-	"product/proto"
+	pb "product/proto"
 	"product/repository"
 	"time"
 )
@@ -26,7 +26,7 @@ type ProductServiceHandler struct {
 	ProductRepository repository.ProductRepository
 }
 
-func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *proto.ProductID, product *proto.Product) error {
+func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *pb.ProductID, product *pb.Product) error {
 	productResp, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -36,7 +36,7 @@ func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *proto
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	*product = proto.Product{
+	*product = pb.Product{
 		ID:          int64(productResp.ID),
 		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
@@ -48,7 +48,7 @@ func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *proto
 	return nil
 }
 
-func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptypb.Empty, stream proto.ProductService_FindAllStream) error {
+func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptypb.Empty, stream pb.ProductService_FindAllStream) error {
 	_ = empty
 	products, err := service.ProductRepository.FindAll(ctx, service.DB)
 	if err != nil {
@@ -56,7 +56,7 @@ func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptyp
 		return errors2.BadRequest("", err.Error())
 	}
 	for _, product := range products {
-		productsResp := proto.Product{
+		productsResp := pb.Product{
 			ID:          int64(product.ID),
 			MerchantID:  int64(product.MerchantID),
 			Name:        product.Name,
@@ -70,14 +70,14 @@ func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptyp
 	return nil
 }
 
-func (service *ProductServiceHandler) FindAllByMerchantID(ctx context.Context, id *proto.MerchantID, stream proto.ProductService_FindAllByMerchantIDStream) error {
+func (service *ProductServiceHandler) FindAllByMerchantID(ctx context.Context, id *pb.MerchantID, stream pb.ProductService_FindAllByMerchantIDStream) error {
 	products, err := service.ProductRepository.FindAllByMerchantID(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())
 	}
 	for _, product := range products {
-		productsResp := proto.Product{
+		productsResp := pb.Product{
 			ID:          int64(product.ID),
 			MerchantID:  int64(product.MerchantID),
 			Name:        product.Name,
@@ -91,7 +91,10 @@ func (service *ProductServiceHandler) FindAllByMerchantID(ctx context.Context, i
 	return nil
 }
 
-func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.ProductCreateReq, product *proto.Product) error {
+func (service *ProductServiceHandler) Create(ctx context.Context, req *pb.ProductCreateReq, product *pb.Product) error {
+	if req.Query.Role != pb.Role_MERCHANT {
+		return errors2.Forbidden("", "access denied for this role")
+	}
 	productResp, err := service.ProductRepository.Create(ctx, service.DB, model.Product{
 		MerchantID:  int(req.MerchantID),
 		Name:        req.Name,
@@ -104,7 +107,7 @@ func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.Pro
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())
 	}
-	*product = proto.Product{
+	*product = pb.Product{
 		ID:          int64(productResp.ID),
 		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
@@ -116,7 +119,10 @@ func (service *ProductServiceHandler) Create(ctx context.Context, req *proto.Pro
 	return nil
 }
 
-func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.ProductUpdateReq, product *proto.Product) error {
+func (service *ProductServiceHandler) Update(ctx context.Context, req *pb.ProductUpdateReq, product *pb.Product) error {
+	if req.Query.Role != pb.Role_MERCHANT {
+		return errors2.Forbidden("", "access denied for this role")
+	}
 	findProduct, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -125,6 +131,9 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 		} else {
 			return errors2.BadRequest("", err.Error())
 		}
+	}
+	if findProduct.MerchantID != int(req.Query.MerchantID) {
+		return errors2.Forbidden("", "access denied for this account merchant")
 	}
 	productResp, err := service.ProductRepository.Update(ctx, service.DB, model.Product{
 		ID:          int(req.ID),
@@ -139,7 +148,7 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())
 	}
-	*product = proto.Product{
+	*product = pb.Product{
 		ID:          int64(productResp.ID),
 		MerchantID:  int64(productResp.MerchantID),
 		Name:        productResp.Name,
@@ -151,8 +160,11 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *proto.Pro
 	return nil
 }
 
-func (service *ProductServiceHandler) Delete(ctx context.Context, id *proto.ProductID, empty *emptypb.Empty) error {
-	_, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(id.ID))
+func (service *ProductServiceHandler) Delete(ctx context.Context, req *pb.DeleteReq, empty *emptypb.Empty) error {
+	if req.Query.Role != pb.Role_MERCHANT {
+		return errors2.Forbidden("", "access denied for this role")
+	}
+	product, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -161,7 +173,10 @@ func (service *ProductServiceHandler) Delete(ctx context.Context, id *proto.Prod
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	err = service.ProductRepository.Delete(ctx, service.DB, int(id.ID))
+	if product.MerchantID != int(req.Query.MerchantID) {
+		return errors2.Forbidden("", "access denied for this account merchant")
+	}
+	err = service.ProductRepository.Delete(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())

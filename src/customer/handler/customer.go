@@ -115,6 +115,12 @@ func (service *CustomerServiceHandler) Create(ctx context.Context, req *pb.Custo
 }
 
 func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.CustomerUpdateReq, customer *pb.Customer) error {
+	if req.Query.Role != pb.Role_CUSTOMER {
+		return errors2.Forbidden("", "access denied for this role")
+	}
+	if req.ID != req.Query.MerchantID {
+		return errors2.Forbidden("", "access denied for this account customer")
+	}
 	findCustomer, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -147,8 +153,14 @@ func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.Custo
 	return nil
 }
 
-func (service *CustomerServiceHandler) Delete(ctx context.Context, id *pb.CustomerID, empty *emptypb.Empty) error {
-	_, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(id.ID))
+func (service *CustomerServiceHandler) Delete(ctx context.Context, req *pb.DeleteReq, empty *emptypb.Empty) error {
+	if req.Query.Role != pb.Role_CUSTOMER {
+		return errors2.Forbidden("", "access denied for this role")
+	}
+	if req.ID != req.Query.MerchantID {
+		return errors2.Forbidden("", "access denied for this account customer")
+	}
+	_, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -157,7 +169,7 @@ func (service *CustomerServiceHandler) Delete(ctx context.Context, id *pb.Custom
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	err = service.CustomerRepository.Delete(ctx, service.DB, int(id.ID))
+	err = service.CustomerRepository.Delete(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())

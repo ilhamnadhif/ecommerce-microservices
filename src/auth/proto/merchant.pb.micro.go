@@ -43,7 +43,7 @@ type MerchantService interface {
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...client.CallOption) (MerchantService_FindAllService, error)
 	Create(ctx context.Context, in *MerchantCreateReq, opts ...client.CallOption) (*Merchant, error)
 	Update(ctx context.Context, in *MerchantUpdateReq, opts ...client.CallOption) (*Merchant, error)
-	Delete(ctx context.Context, in *MerchantID, opts ...client.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error)
 }
 
 type merchantService struct {
@@ -152,7 +152,7 @@ func (c *merchantService) Update(ctx context.Context, in *MerchantUpdateReq, opt
 	return out, nil
 }
 
-func (c *merchantService) Delete(ctx context.Context, in *MerchantID, opts ...client.CallOption) (*emptypb.Empty, error) {
+func (c *merchantService) Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error) {
 	req := c.c.NewRequest(c.name, "MerchantService.Delete", in)
 	out := new(emptypb.Empty)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -170,7 +170,7 @@ type MerchantServiceHandler interface {
 	FindAll(context.Context, *emptypb.Empty, MerchantService_FindAllStream) error
 	Create(context.Context, *MerchantCreateReq, *Merchant) error
 	Update(context.Context, *MerchantUpdateReq, *Merchant) error
-	Delete(context.Context, *MerchantID, *emptypb.Empty) error
+	Delete(context.Context, *DeleteReq, *emptypb.Empty) error
 }
 
 func RegisterMerchantServiceHandler(s server.Server, hdlr MerchantServiceHandler, opts ...server.HandlerOption) error {
@@ -180,7 +180,7 @@ func RegisterMerchantServiceHandler(s server.Server, hdlr MerchantServiceHandler
 		FindAll(ctx context.Context, stream server.Stream) error
 		Create(ctx context.Context, in *MerchantCreateReq, out *Merchant) error
 		Update(ctx context.Context, in *MerchantUpdateReq, out *Merchant) error
-		Delete(ctx context.Context, in *MerchantID, out *emptypb.Empty) error
+		Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error
 	}
 	type MerchantService struct {
 		merchantService
@@ -249,6 +249,6 @@ func (h *merchantServiceHandler) Update(ctx context.Context, in *MerchantUpdateR
 	return h.MerchantServiceHandler.Update(ctx, in, out)
 }
 
-func (h *merchantServiceHandler) Delete(ctx context.Context, in *MerchantID, out *emptypb.Empty) error {
+func (h *merchantServiceHandler) Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error {
 	return h.MerchantServiceHandler.Delete(ctx, in, out)
 }

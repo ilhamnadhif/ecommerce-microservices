@@ -23,6 +23,7 @@ message ProductCreateReq {
   string Name = 2;
   string Description = 3;
   int64 Price = 4;
+  QueryData Query = 5;
 }
 
 message ProductUpdateReq {
@@ -30,15 +31,12 @@ message ProductUpdateReq {
   string Name = 2;
   string Description = 3;
   int64 Price = 4;
+  QueryData Query = 5;
 }
 
 message ProductID {
   int64 ID = 1;
 }
-
-//message MerchantID {
-//  int64 ID = 1;
-//}
 
 service ProductService {
   rpc FindOneByID(ProductID) returns (Product);
@@ -46,5 +44,5 @@ service ProductService {
   rpc FindAllByMerchantID(MerchantID) returns (stream Product);
   rpc Create(ProductCreateReq) returns (Product);
   rpc Update(ProductUpdateReq) returns (Product);
-  rpc Delete(ProductID) returns (google.protobuf.Empty);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
 }

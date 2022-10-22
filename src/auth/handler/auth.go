@@ -35,8 +35,9 @@ func (service *AuthServiceHandler) LoginMerchant(ctx context.Context, req *pb.Lo
 	}
 
 	token, err := pkg.GenerateToken(dto.JWTCustomClaims{
-		ID:   int(merchant.ID),
-		Role: "merchant",
+		ID:       int(merchant.ID),
+		Role:     pb.Role_MERCHANT,
+		RoleName: "merchant",
 	})
 	if err != nil {
 		return errors2.BadRequest("", err.Error())
@@ -60,8 +61,9 @@ func (service *AuthServiceHandler) LoginCustomer(ctx context.Context, req *pb.Lo
 	}
 
 	token, err := pkg.GenerateToken(dto.JWTCustomClaims{
-		ID:   int(customer.ID),
-		Role: "customer",
+		ID:       int(customer.ID),
+		Role:     pb.Role_CUSTOMER,
+		RoleName: "customer",
 	})
 	if err != nil {
 		return errors2.BadRequest("", err.Error())
