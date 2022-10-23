@@ -16,7 +16,7 @@ type ProductService interface {
 	FindAll(ctx context.Context) ([]dto.ProductResponse, error)
 	Create(ctx context.Context, request dto.ProductCreateReq) (dto.ProductResponse, error)
 	Update(ctx context.Context, request dto.ProductUpdateReq) (dto.ProductResponse, error)
-	Delete(ctx context.Context, productID int, queryData dto.QueryData) error
+	Delete(ctx context.Context, request dto.ProductDeleteReq) error
 }
 
 func NewProductService(
@@ -111,8 +111,8 @@ func (service *productServiceImpl) Create(ctx context.Context, request dto.Produ
 		Description: request.Description,
 		Price:       int64(request.Price),
 		Query: &pb.QueryData{
-			MerchantID: request.QueryData.ID,
-			Role:       request.QueryData.Role,
+			ID:   request.QueryData.ID,
+			Role: request.QueryData.Role,
 		},
 	})
 	if err != nil {
@@ -137,8 +137,8 @@ func (service *productServiceImpl) Update(ctx context.Context, request dto.Produ
 		Description: request.Description,
 		Price:       int64(request.Price),
 		Query: &pb.QueryData{
-			MerchantID: request.QueryData.ID,
-			Role:       request.QueryData.Role,
+			ID:   request.QueryData.ID,
+			Role: request.QueryData.Role,
 		},
 	})
 	if err != nil {
@@ -156,12 +156,12 @@ func (service *productServiceImpl) Update(ctx context.Context, request dto.Produ
 	}, nil
 }
 
-func (service *productServiceImpl) Delete(ctx context.Context, productID int, queryData dto.QueryData) error {
+func (service *productServiceImpl) Delete(ctx context.Context, request dto.ProductDeleteReq) error {
 	_, err := service.ProductRPC.Delete(ctx, &pb.DeleteReq{
-		ID: int64(productID),
+		ID: int64(request.ID),
 		Query: &pb.QueryData{
-			MerchantID: queryData.ID,
-			Role:       queryData.Role,
+			ID:   request.QueryData.ID,
+			Role: request.QueryData.Role,
 		},
 	})
 	if err != nil {

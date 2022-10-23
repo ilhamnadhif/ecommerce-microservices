@@ -19,7 +19,7 @@ type ProductCreateReq struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`
-	QueryData
+	QueryData   QueryData
 }
 
 type ProductUpdateReq struct {
@@ -27,5 +27,9 @@ type ProductUpdateReq struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`
-	QueryData
+	QueryData   QueryData
+}
+type ProductDeleteReq struct {
+	ID        int
+	QueryData QueryData
 }

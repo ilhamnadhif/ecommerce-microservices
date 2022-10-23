@@ -29,17 +29,21 @@ func Route() *echo.Echo {
 	// service
 	productService := service.NewProductService(productRPCClient, merchantRPCClient)
 	merchantService := service.NewMerchantService(merchantRPCClient, productRPCClient)
+	customerService := service.NewCustomerService(customerRPCClient)
 	authService := service.NewAuthService(merchantRPCClient, customerRPCClient)
 
 	// handler
 	productHandler := handler.NewProductHandler(productService)
 	merchantHandler := handler.NewMerchantHandler(merchantService)
+	customerHandler := handler.NewCustomerHandler(customerService)
 	authHandler := handler.NewAuthHandler(authService)
 
 	config := middleware2.JWTConfig{
 		Claims:     &dto.JWTCustomClaims{},
 		SigningKey: []byte(config.Config.Jwt.SigningKey),
 	}
+	jwtMiddleware := middleware2.JWTWithConfig(config)
+
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.CustomHTTPErrorHandler
 	e.Use(middleware2.CORS())
@@ -51,21 +55,26 @@ func Route() *echo.Echo {
 	authRouter.POST("/merchant", authHandler.LoginMerchant)
 	authRouter.POST("/customer", authHandler.LoginCustomer)
 
-	apiRouter.Use(middleware2.JWTWithConfig(config))
-
 	productRouter := apiRouter.Group("/products")
 	productRouter.GET("", productHandler.FindAll)
 	productRouter.GET("/:productID", productHandler.FindOneByID)
-	productRouter.POST("", productHandler.Create)
-	productRouter.PUT("/:productID", productHandler.Update)
-	productRouter.DELETE("/:productID", productHandler.Delete)
+	productRouter.POST("", productHandler.Create, jwtMiddleware)
+	productRouter.PUT("/:productID", productHandler.Update, jwtMiddleware)
+	productRouter.DELETE("/:productID", productHandler.Delete, jwtMiddleware)
 
 	merchantRouter := apiRouter.Group("/merchants")
 	merchantRouter.GET("", merchantHandler.FindAll)
 	merchantRouter.GET("/:merchantID", merchantHandler.FindOneByID)
 	merchantRouter.POST("", merchantHandler.Create)
-	merchantRouter.PUT("/:merchantID", merchantHandler.Update)
-	merchantRouter.DELETE("/:merchantID", merchantHandler.Delete)
+	merchantRouter.PUT("/:merchantID", merchantHandler.Update, jwtMiddleware)
+	merchantRouter.DELETE("/:merchantID", merchantHandler.Delete, jwtMiddleware)
+
+	customerRouter := apiRouter.Group("/customers")
+	customerRouter.GET("", customerHandler.FindAll)
+	customerRouter.GET("/:customerID", customerHandler.FindOneByID)
+	customerRouter.POST("", customerHandler.Create)
+	customerRouter.PUT("/:customerID", customerHandler.Update, jwtMiddleware)
+	customerRouter.DELETE("/:customerID", customerHandler.Delete, jwtMiddleware)
 
 	return e
 }

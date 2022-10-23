@@ -67,7 +67,7 @@ func (handler *merchantHandler) Update(c echo.Context) error {
 	}
 	req.ID = merchantID
 	req.QueryData.ID = int64(claims.ID)
-	req.Role = claims.Role
+	req.QueryData.Role = claims.Role
 	merchant, err := handler.MerchantService.Update(ctx, req)
 	if err != nil {
 		return err
@@ -83,9 +83,12 @@ func (handler *merchantHandler) Delete(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	err = handler.MerchantService.Delete(ctx, merchantID, dto.QueryData{
-		ID:   int64(claims.ID),
-		Role: claims.Role,
+	err = handler.MerchantService.Delete(ctx, dto.MerchantDeleteReq{
+		ID: merchantID,
+		QueryData: dto.QueryData{
+			ID:   int64(claims.ID),
+			Role: claims.Role,
+		},
 	})
 	if err != nil {
 		return err

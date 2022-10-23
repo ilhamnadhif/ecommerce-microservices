@@ -49,7 +49,7 @@ enum Role{
 }
 
 message QueryData {
-  int64 MerchantID = 1;
+  int64 ID = 1;
   Role Role = 2 ;
 }
 

@@ -1,6 +1,6 @@
 package dto
 
-type MerchantResponse struct {
+type CustomerResponse struct {
 	ID        int      `json:"id"`
 	Name      string   `json:"name"`
 	Email     string   `json:"email"`
@@ -9,18 +9,13 @@ type MerchantResponse struct {
 	UpdatedAt DateTime `json:"updated_at"`
 }
 
-type MerchantResponseWithProducts struct {
-	MerchantResponse
-	Products []ProductResponse `json:"products"`
-}
-
-type MerchantCreateReq struct {
+type CustomerCreateReq struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type MerchantUpdateReq struct {
+type CustomerUpdateReq struct {
 	ID        int
 	Name      string `json:"name"`
 	Email     string `json:"email"`
@@ -28,7 +23,7 @@ type MerchantUpdateReq struct {
 	QueryData QueryData
 }
 
-type MerchantDeleteReq struct {
+type CustomerDeleteReq struct {
 	ID        int
 	QueryData QueryData
 }
