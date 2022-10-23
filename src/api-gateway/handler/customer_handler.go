@@ -2,6 +2,7 @@ package handler
 
 import (
 	"api-gateway/dto"
+	pb "api-gateway/proto"
 	"api-gateway/service"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -26,6 +27,20 @@ func (handler *customerHandler) FindOneByID(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	customer, err := handler.CustomerService.FindOneByID(ctx, customerID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, dto.WebResponseSuccess(customer))
+}
+
+func (handler *customerHandler) FindOneByCommon(c echo.Context) error {
+	ctx := c.Request().Context()
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*dto.JWTCustomClaims)
+	if claims.Role != pb.Role_CUSTOMER {
+		return echo.NewHTTPError(http.StatusForbidden, "customer: access denied for this role")
+	}
+	customer, err := handler.CustomerService.FindOneByID(ctx, claims.ID)
 	if err != nil {
 		return err
 	}

@@ -66,6 +66,7 @@ func Route() *echo.Echo {
 	merchantRouter.GET("", merchantHandler.FindAll)
 	merchantRouter.GET("/:merchantID", merchantHandler.FindOneByID)
 	merchantRouter.POST("", merchantHandler.Create)
+	merchantRouter.GET("/common", merchantHandler.FindOneByCommon, jwtMiddleware)
 	merchantRouter.PUT("/:merchantID", merchantHandler.Update, jwtMiddleware)
 	merchantRouter.DELETE("/:merchantID", merchantHandler.Delete, jwtMiddleware)
 
@@ -73,6 +74,7 @@ func Route() *echo.Echo {
 	customerRouter.GET("", customerHandler.FindAll)
 	customerRouter.GET("/:customerID", customerHandler.FindOneByID)
 	customerRouter.POST("", customerHandler.Create)
+	customerRouter.GET("/common", customerHandler.FindOneByCommon, jwtMiddleware)
 	customerRouter.PUT("/:customerID", customerHandler.Update, jwtMiddleware)
 	customerRouter.DELETE("/:customerID", customerHandler.Delete, jwtMiddleware)
 
