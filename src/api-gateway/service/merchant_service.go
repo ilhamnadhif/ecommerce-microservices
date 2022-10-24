@@ -127,15 +127,17 @@ func (service *merchantServiceImpl) Create(ctx context.Context, request dto.Merc
 }
 
 func (service *merchantServiceImpl) Update(ctx context.Context, request dto.MerchantUpdateReq) (dto.MerchantResponse, error) {
+	if request.QueryData.Role != dto.MERCHANT_ROLE {
+		return dto.MerchantResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	if request.ID != request.QueryData.ID {
+		return dto.MerchantResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
 	merchant, err := service.MerchantRPC.Update(ctx, &pb.MerchantUpdateReq{
 		ID:       int64(request.ID),
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: request.Password,
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors.FromError(err)
@@ -152,6 +154,12 @@ func (service *merchantServiceImpl) Update(ctx context.Context, request dto.Merc
 }
 
 func (service *merchantServiceImpl) Delete(ctx context.Context, request dto.MerchantDeleteReq) error {
+	if request.QueryData.Role != dto.MERCHANT_ROLE {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	if request.ID != request.QueryData.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
 	stream, err := service.ProductRPC.FindAllByMerchantID(ctx, &pb.MerchantID{ID: int64(request.ID)})
 	if err != nil {
 		e := errors.FromError(err)
@@ -179,12 +187,8 @@ func (service *merchantServiceImpl) Delete(ctx context.Context, request dto.Merc
 	if len(productsResponse) > 0 {
 		return echo.NewHTTPError(http.StatusConflict, "products in this merchant is exist")
 	}
-	_, err = service.MerchantRPC.Delete(ctx, &pb.DeleteReq{
+	_, err = service.MerchantRPC.Delete(ctx, &pb.MerchantID{
 		ID: int64(request.ID),
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors.FromError(err)

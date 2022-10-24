@@ -2,7 +2,6 @@ package handler
 
 import (
 	"api-gateway/dto"
-	pb "api-gateway/proto"
 	"api-gateway/service"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -37,7 +36,7 @@ func (handler *customerHandler) FindOneByCommon(c echo.Context) error {
 	ctx := c.Request().Context()
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*dto.JWTCustomClaims)
-	if claims.Role != pb.Role_CUSTOMER {
+	if claims.Role != dto.CUSTOMER_ROLE {
 		return echo.NewHTTPError(http.StatusForbidden, "customer: access denied for this role")
 	}
 	customer, err := handler.CustomerService.FindOneByID(ctx, claims.ID)
@@ -81,7 +80,7 @@ func (handler *customerHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	req.ID = customerID
-	req.QueryData.ID = int64(claims.ID)
+	req.QueryData.ID = claims.ID
 	req.QueryData.Role = claims.Role
 	customer, err := handler.CustomerService.Update(ctx, req)
 	if err != nil {
@@ -101,7 +100,7 @@ func (handler *customerHandler) Delete(c echo.Context) error {
 	err = handler.CustomerService.Delete(ctx, dto.CustomerDeleteReq{
 		ID: customerID,
 		QueryData: dto.QueryData{
-			ID:   int64(claims.ID),
+			ID:   claims.ID,
 			Role: claims.Role,
 		},
 	})

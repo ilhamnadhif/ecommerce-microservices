@@ -98,22 +98,21 @@ func (service *productServiceImpl) FindAll(ctx context.Context) ([]dto.ProductRe
 }
 
 func (service *productServiceImpl) Create(ctx context.Context, request dto.ProductCreateReq) (dto.ProductResponse, error) {
+	if request.QueryData.Role != dto.MERCHANT_ROLE {
+		return dto.ProductResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
 	_, err := service.MerchantRPC.FindOneByID(ctx, &pb.MerchantID{
-		ID: int64(request.MerchantID),
+		ID: int64(request.QueryData.ID),
 	})
 	if err != nil {
 		e := errors2.FromError(err)
 		return dto.ProductResponse{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("merchant: %s", e.GetDetail()))
 	}
 	product, err := service.ProductRPC.Create(ctx, &pb.ProductCreateReq{
-		MerchantID:  int64(request.MerchantID),
+		MerchantID:  int64(request.QueryData.ID),
 		Name:        request.Name,
 		Description: request.Description,
 		Price:       int64(request.Price),
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors2.FromError(err)
@@ -131,15 +130,24 @@ func (service *productServiceImpl) Create(ctx context.Context, request dto.Produ
 }
 
 func (service *productServiceImpl) Update(ctx context.Context, request dto.ProductUpdateReq) (dto.ProductResponse, error) {
+	if request.QueryData.Role != dto.MERCHANT_ROLE {
+		return dto.ProductResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	findProduct, err := service.ProductRPC.FindOneByID(ctx, &pb.ProductID{
+		ID: int64(request.ID),
+	})
+	if err != nil {
+		e := errors2.FromError(err)
+		return dto.ProductResponse{}, echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("product: %s", e.GetDetail()))
+	}
+	if request.QueryData.ID != int(findProduct.MerchantID) {
+		return dto.ProductResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
 	product, err := service.ProductRPC.Update(ctx, &pb.ProductUpdateReq{
 		ID:          int64(request.ID),
 		Name:        request.Name,
 		Description: request.Description,
 		Price:       int64(request.Price),
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors2.FromError(err)
@@ -157,12 +165,21 @@ func (service *productServiceImpl) Update(ctx context.Context, request dto.Produ
 }
 
 func (service *productServiceImpl) Delete(ctx context.Context, request dto.ProductDeleteReq) error {
-	_, err := service.ProductRPC.Delete(ctx, &pb.DeleteReq{
+	if request.QueryData.Role != dto.MERCHANT_ROLE {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	findProduct, err := service.ProductRPC.FindOneByID(ctx, &pb.ProductID{
 		ID: int64(request.ID),
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
+	})
+	if err != nil {
+		e := errors2.FromError(err)
+		return echo.NewHTTPError(int(e.GetCode()), fmt.Sprintf("product: %s", e.GetDetail()))
+	}
+	if request.QueryData.ID != int(findProduct.MerchantID) {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
+	_, err = service.ProductRPC.Delete(ctx, &pb.ProductID{
+		ID: int64(request.ID),
 	})
 	if err != nil {
 		e := errors2.FromError(err)

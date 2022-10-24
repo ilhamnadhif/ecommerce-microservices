@@ -2,7 +2,6 @@ package handler
 
 import (
 	"api-gateway/dto"
-	pb "api-gateway/proto"
 	"api-gateway/service"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -37,8 +36,8 @@ func (handler *merchantHandler) FindOneByCommon(c echo.Context) error {
 	ctx := c.Request().Context()
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*dto.JWTCustomClaims)
-	if claims.Role != pb.Role_MERCHANT {
-		return echo.NewHTTPError(http.StatusForbidden, "merchant: access denied for this role")
+	if claims.Role != dto.MERCHANT_ROLE {
+		return echo.NewHTTPError(http.StatusForbidden, "customer: access denied for this role")
 	}
 	merchant, err := handler.MerchantService.FindOneByID(ctx, claims.ID)
 	if err != nil {
@@ -81,7 +80,7 @@ func (handler *merchantHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	req.ID = merchantID
-	req.QueryData.ID = int64(claims.ID)
+	req.QueryData.ID = claims.ID
 	req.QueryData.Role = claims.Role
 	merchant, err := handler.MerchantService.Update(ctx, req)
 	if err != nil {
@@ -101,7 +100,7 @@ func (handler *merchantHandler) Delete(c echo.Context) error {
 	err = handler.MerchantService.Delete(ctx, dto.MerchantDeleteReq{
 		ID: merchantID,
 		QueryData: dto.QueryData{
-			ID:   int64(claims.ID),
+			ID:   claims.ID,
 			Role: claims.Role,
 		},
 	})

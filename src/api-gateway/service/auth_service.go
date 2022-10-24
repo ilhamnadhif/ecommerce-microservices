@@ -42,9 +42,8 @@ func (service *authServiceImpl) LoginMerchant(ctx context.Context, req dto.Login
 		return dto.TokenResponse{}, echo.NewHTTPError(http.StatusBadRequest, "password not match")
 	}
 	token, err := pkg.GenerateToken(dto.JWTCustomClaims{
-		ID:       int(merchant.ID),
-		Role:     pb.Role_MERCHANT,
-		RoleName: "merchant",
+		ID:   int(merchant.ID),
+		Role: dto.MERCHANT_ROLE,
 	})
 	if err != nil {
 		return dto.TokenResponse{}, echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -66,9 +65,8 @@ func (service *authServiceImpl) LoginCustomer(ctx context.Context, req dto.Login
 		return dto.TokenResponse{}, echo.NewHTTPError(http.StatusBadRequest, "password not match")
 	}
 	token, err := pkg.GenerateToken(dto.JWTCustomClaims{
-		ID:       int(customer.ID),
-		Role:     pb.Role_CUSTOMER,
-		RoleName: "customer",
+		ID:   int(customer.ID),
+		Role: dto.CUSTOMER_ROLE,
 	})
 	if err != nil {
 		return dto.TokenResponse{}, echo.NewHTTPError(http.StatusBadRequest, err.Error())

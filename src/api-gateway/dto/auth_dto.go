@@ -1,7 +1,6 @@
 package dto
 
 import (
-	pb "api-gateway/proto"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -15,8 +14,7 @@ type TokenResponse struct {
 }
 
 type JWTCustomClaims struct {
-	ID       int     `json:"id"`
-	Role     pb.Role `json:"role"`
-	RoleName string  `json:"role_name"`
+	ID   int  `json:"id"`
+	Role Role `json:"role"`
 	jwt.StandardClaims
 }

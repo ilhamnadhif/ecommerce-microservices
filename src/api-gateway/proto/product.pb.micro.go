@@ -43,7 +43,7 @@ type ProductService interface {
 	FindAllByMerchantID(ctx context.Context, in *MerchantID, opts ...client.CallOption) (ProductService_FindAllByMerchantIDService, error)
 	Create(ctx context.Context, in *ProductCreateReq, opts ...client.CallOption) (*Product, error)
 	Update(ctx context.Context, in *ProductUpdateReq, opts ...client.CallOption) (*Product, error)
-	Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *ProductID, opts ...client.CallOption) (*emptypb.Empty, error)
 }
 
 type productService struct {
@@ -196,7 +196,7 @@ func (c *productService) Update(ctx context.Context, in *ProductUpdateReq, opts 
 	return out, nil
 }
 
-func (c *productService) Delete(ctx context.Context, in *DeleteReq, opts ...client.CallOption) (*emptypb.Empty, error) {
+func (c *productService) Delete(ctx context.Context, in *ProductID, opts ...client.CallOption) (*emptypb.Empty, error) {
 	req := c.c.NewRequest(c.name, "ProductService.Delete", in)
 	out := new(emptypb.Empty)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -214,7 +214,7 @@ type ProductServiceHandler interface {
 	FindAllByMerchantID(context.Context, *MerchantID, ProductService_FindAllByMerchantIDStream) error
 	Create(context.Context, *ProductCreateReq, *Product) error
 	Update(context.Context, *ProductUpdateReq, *Product) error
-	Delete(context.Context, *DeleteReq, *emptypb.Empty) error
+	Delete(context.Context, *ProductID, *emptypb.Empty) error
 }
 
 func RegisterProductServiceHandler(s server.Server, hdlr ProductServiceHandler, opts ...server.HandlerOption) error {
@@ -224,7 +224,7 @@ func RegisterProductServiceHandler(s server.Server, hdlr ProductServiceHandler, 
 		FindAllByMerchantID(ctx context.Context, stream server.Stream) error
 		Create(ctx context.Context, in *ProductCreateReq, out *Product) error
 		Update(ctx context.Context, in *ProductUpdateReq, out *Product) error
-		Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error
+		Delete(ctx context.Context, in *ProductID, out *emptypb.Empty) error
 	}
 	type ProductService struct {
 		productService
@@ -329,6 +329,6 @@ func (h *productServiceHandler) Update(ctx context.Context, in *ProductUpdateReq
 	return h.ProductServiceHandler.Update(ctx, in, out)
 }
 
-func (h *productServiceHandler) Delete(ctx context.Context, in *DeleteReq, out *emptypb.Empty) error {
+func (h *productServiceHandler) Delete(ctx context.Context, in *ProductID, out *emptypb.Empty) error {
 	return h.ProductServiceHandler.Delete(ctx, in, out)
 }

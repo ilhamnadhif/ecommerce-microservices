@@ -1,14 +1,20 @@
 package dto
 
 import (
-	pb "api-gateway/proto"
 	"fmt"
 	"time"
 )
 
+type Role string
+
+const (
+	MERCHANT_ROLE Role = "merchant"
+	CUSTOMER_ROLE Role = "customer"
+)
+
 type QueryData struct {
-	ID   int64
-	Role pb.Role
+	ID   int
+	Role Role
 }
 
 type DateTime time.Time

@@ -15,7 +15,6 @@ type ProductResponseWithMerchant struct {
 }
 
 type ProductCreateReq struct {
-	MerchantID  int    `json:"merchant_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`

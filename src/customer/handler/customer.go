@@ -70,8 +70,7 @@ func (service *CustomerServiceHandler) FindOneByEmail(ctx context.Context, email
 	return nil
 }
 
-func (service *CustomerServiceHandler) FindAll(ctx context.Context, empty *emptypb.Empty, stream pb.CustomerService_FindAllStream) error {
-	_ = empty
+func (service *CustomerServiceHandler) FindAll(ctx context.Context, _ *emptypb.Empty, stream pb.CustomerService_FindAllStream) error {
 	customers, err := service.CustomerRepository.FindAll(ctx, service.DB)
 	if err != nil {
 		logrus.Error(err.Error())
@@ -115,12 +114,6 @@ func (service *CustomerServiceHandler) Create(ctx context.Context, req *pb.Custo
 }
 
 func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.CustomerUpdateReq, customer *pb.Customer) error {
-	if req.Query.Role != pb.Role_CUSTOMER {
-		return errors2.Forbidden("", "access denied for this role")
-	}
-	if req.ID != req.Query.MerchantID {
-		return errors2.Forbidden("", "access denied for this account customer")
-	}
 	findCustomer, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -153,14 +146,8 @@ func (service *CustomerServiceHandler) Update(ctx context.Context, req *pb.Custo
 	return nil
 }
 
-func (service *CustomerServiceHandler) Delete(ctx context.Context, req *pb.DeleteReq, empty *emptypb.Empty) error {
-	if req.Query.Role != pb.Role_CUSTOMER {
-		return errors2.Forbidden("", "access denied for this role")
-	}
-	if req.ID != req.Query.MerchantID {
-		return errors2.Forbidden("", "access denied for this account customer")
-	}
-	_, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(req.ID))
+func (service *CustomerServiceHandler) Delete(ctx context.Context, id *pb.CustomerID, _ *emptypb.Empty) error {
+	_, err := service.CustomerRepository.FindOneByID(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -169,7 +156,7 @@ func (service *CustomerServiceHandler) Delete(ctx context.Context, req *pb.Delet
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	err = service.CustomerRepository.Delete(ctx, service.DB, int(req.ID))
+	err = service.CustomerRepository.Delete(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())

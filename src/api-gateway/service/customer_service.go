@@ -97,15 +97,17 @@ func (service *customerServiceImpl) Create(ctx context.Context, request dto.Cust
 }
 
 func (service *customerServiceImpl) Update(ctx context.Context, request dto.CustomerUpdateReq) (dto.CustomerResponse, error) {
+	if request.QueryData.Role != dto.CUSTOMER_ROLE {
+		return dto.CustomerResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	if request.ID != request.QueryData.ID {
+		return dto.CustomerResponse{}, echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
 	customer, err := service.CustomerRPC.Update(ctx, &pb.CustomerUpdateReq{
 		ID:       int64(request.ID),
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: request.Password,
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors.FromError(err)
@@ -122,12 +124,14 @@ func (service *customerServiceImpl) Update(ctx context.Context, request dto.Cust
 }
 
 func (service *customerServiceImpl) Delete(ctx context.Context, request dto.CustomerDeleteReq) error {
-	_, err := service.CustomerRPC.Delete(ctx, &pb.DeleteReq{
+	if request.QueryData.Role != dto.CUSTOMER_ROLE {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this role")
+	}
+	if request.ID != request.QueryData.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "access denied for this account")
+	}
+	_, err := service.CustomerRPC.Delete(ctx, &pb.CustomerID{
 		ID: int64(request.ID),
-		Query: &pb.QueryData{
-			ID:   request.QueryData.ID,
-			Role: request.QueryData.Role,
-		},
 	})
 	if err != nil {
 		e := errors.FromError(err)

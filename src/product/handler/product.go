@@ -48,8 +48,7 @@ func (service *ProductServiceHandler) FindOneByID(ctx context.Context, id *pb.Pr
 	return nil
 }
 
-func (service *ProductServiceHandler) FindAll(ctx context.Context, empty *emptypb.Empty, stream pb.ProductService_FindAllStream) error {
-	_ = empty
+func (service *ProductServiceHandler) FindAll(ctx context.Context, _ *emptypb.Empty, stream pb.ProductService_FindAllStream) error {
 	products, err := service.ProductRepository.FindAll(ctx, service.DB)
 	if err != nil {
 		logrus.Error(err.Error())
@@ -92,9 +91,6 @@ func (service *ProductServiceHandler) FindAllByMerchantID(ctx context.Context, i
 }
 
 func (service *ProductServiceHandler) Create(ctx context.Context, req *pb.ProductCreateReq, product *pb.Product) error {
-	if req.Query.Role != pb.Role_MERCHANT {
-		return errors2.Forbidden("", "access denied for this role")
-	}
 	productResp, err := service.ProductRepository.Create(ctx, service.DB, model.Product{
 		MerchantID:  int(req.MerchantID),
 		Name:        req.Name,
@@ -120,9 +116,6 @@ func (service *ProductServiceHandler) Create(ctx context.Context, req *pb.Produc
 }
 
 func (service *ProductServiceHandler) Update(ctx context.Context, req *pb.ProductUpdateReq, product *pb.Product) error {
-	if req.Query.Role != pb.Role_MERCHANT {
-		return errors2.Forbidden("", "access denied for this role")
-	}
 	findProduct, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(req.ID))
 	if err != nil {
 		logrus.Error(err.Error())
@@ -131,9 +124,6 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *pb.Produc
 		} else {
 			return errors2.BadRequest("", err.Error())
 		}
-	}
-	if findProduct.MerchantID != int(req.Query.MerchantID) {
-		return errors2.Forbidden("", "access denied for this account merchant")
 	}
 	productResp, err := service.ProductRepository.Update(ctx, service.DB, model.Product{
 		ID:          int(req.ID),
@@ -160,11 +150,8 @@ func (service *ProductServiceHandler) Update(ctx context.Context, req *pb.Produc
 	return nil
 }
 
-func (service *ProductServiceHandler) Delete(ctx context.Context, req *pb.DeleteReq, empty *emptypb.Empty) error {
-	if req.Query.Role != pb.Role_MERCHANT {
-		return errors2.Forbidden("", "access denied for this role")
-	}
-	product, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(req.ID))
+func (service *ProductServiceHandler) Delete(ctx context.Context, id *pb.ProductID, _ *emptypb.Empty) error {
+	_, err := service.ProductRepository.FindOneByID(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -173,10 +160,7 @@ func (service *ProductServiceHandler) Delete(ctx context.Context, req *pb.Delete
 			return errors2.BadRequest("", err.Error())
 		}
 	}
-	if product.MerchantID != int(req.Query.MerchantID) {
-		return errors2.Forbidden("", "access denied for this account merchant")
-	}
-	err = service.ProductRepository.Delete(ctx, service.DB, int(req.ID))
+	err = service.ProductRepository.Delete(ctx, service.DB, int(id.ID))
 	if err != nil {
 		logrus.Error(err.Error())
 		return errors2.BadRequest("", err.Error())

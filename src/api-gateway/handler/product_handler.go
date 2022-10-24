@@ -49,7 +49,7 @@ func (handler *productHandler) Create(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	req.QueryData.ID = int64(claims.ID)
+	req.QueryData.ID = claims.ID
 	req.QueryData.Role = claims.Role
 	product, err := handler.ProductService.Create(ctx, req)
 	if err != nil {
@@ -70,7 +70,7 @@ func (handler *productHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	req.ID = productID
-	req.QueryData.ID = int64(claims.ID)
+	req.QueryData.ID = claims.ID
 	req.QueryData.Role = claims.Role
 	product, err := handler.ProductService.Update(ctx, req)
 	if err != nil {
@@ -90,7 +90,7 @@ func (handler *productHandler) Delete(c echo.Context) error {
 	err = handler.ProductService.Delete(ctx, dto.ProductDeleteReq{
 		ID: productID,
 		QueryData: dto.QueryData{
-			ID:   int64(claims.ID),
+			ID:   claims.ID,
 			Role: claims.Role,
 		},
 	})
