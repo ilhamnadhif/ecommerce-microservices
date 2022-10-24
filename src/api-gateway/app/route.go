@@ -25,17 +25,20 @@ func Route() *echo.Echo {
 	productRPCClient := pb.NewProductService(config.Config.Service[config.ProductService].ServiceName, srv.Client())
 	merchantRPCClient := pb.NewMerchantService(config.Config.Service[config.MerchantService].ServiceName, srv.Client())
 	customerRPCClient := pb.NewCustomerService(config.Config.Service[config.CustomerService].ServiceName, srv.Client())
+	cartRPCClient := pb.NewCartService(config.Config.Service[config.CartService].ServiceName, srv.Client())
 
 	// service
 	productService := service.NewProductService(productRPCClient, merchantRPCClient)
 	merchantService := service.NewMerchantService(merchantRPCClient, productRPCClient)
-	customerService := service.NewCustomerService(customerRPCClient)
+	customerService := service.NewCustomerService(customerRPCClient, cartRPCClient, productRPCClient)
+	cartService := service.NewCartService(cartRPCClient, productRPCClient)
 	authService := service.NewAuthService(merchantRPCClient, customerRPCClient)
 
 	// handler
 	productHandler := handler.NewProductHandler(productService)
 	merchantHandler := handler.NewMerchantHandler(merchantService)
 	customerHandler := handler.NewCustomerHandler(customerService)
+	cartHandler := handler.NewCartHandler(cartService)
 	authHandler := handler.NewAuthHandler(authService)
 
 	config := middleware2.JWTConfig{
@@ -77,6 +80,13 @@ func Route() *echo.Echo {
 	customerRouter.GET("/common", customerHandler.FindOneByCommon, jwtMiddleware)
 	customerRouter.PUT("/:customerID", customerHandler.Update, jwtMiddleware)
 	customerRouter.DELETE("/:customerID", customerHandler.Delete, jwtMiddleware)
+
+	cartRouter := apiRouter.Group("/carts")
+	cartRouter.GET("", cartHandler.FindAll)
+	cartRouter.GET("/:cartID", cartHandler.FindOneByID)
+	cartRouter.POST("", cartHandler.Create, jwtMiddleware)
+	cartRouter.PUT("/:cartID", cartHandler.Update, jwtMiddleware)
+	cartRouter.DELETE("/:cartID", cartHandler.Delete, jwtMiddleware)
 
 	return e
 }

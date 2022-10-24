@@ -4,6 +4,7 @@ const (
 	ProductService  = "product"
 	MerchantService = "merchant"
 	CustomerService = "customer"
+	CartService     = "cart"
 )
 
 type (

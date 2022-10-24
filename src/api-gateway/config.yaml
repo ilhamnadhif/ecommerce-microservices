@@ -11,6 +11,9 @@ service:
   customer:
     serviceName: customerservice
     hostPort: :6003
+  cart:
+    serviceName: cartservice
+    hostPort: :6005
 
 jwt:
   expiredIn: 1

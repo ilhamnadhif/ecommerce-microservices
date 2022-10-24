@@ -52,6 +52,7 @@ func (service *productServiceImpl) FindOneByID(ctx context.Context, productID in
 	return dto.ProductResponseWithMerchant{
 		ProductResponse: dto.ProductResponse{
 			ID:          int(product.ID),
+			MerchantID:  int(product.MerchantID),
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       int(product.Price),
