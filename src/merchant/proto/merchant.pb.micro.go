@@ -40,6 +40,7 @@ func NewMerchantServiceEndpoints() []*api.Endpoint {
 type MerchantService interface {
 	FindOneByID(ctx context.Context, in *MerchantID, opts ...client.CallOption) (*Merchant, error)
 	FindOneByEmail(ctx context.Context, in *MerchantEmail, opts ...client.CallOption) (*Merchant, error)
+	FindOneBySlug(ctx context.Context, in *MerchantSlug, opts ...client.CallOption) (*Merchant, error)
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...client.CallOption) (MerchantService_FindAllService, error)
 	Create(ctx context.Context, in *MerchantCreateReq, opts ...client.CallOption) (*Merchant, error)
 	Update(ctx context.Context, in *MerchantUpdateReq, opts ...client.CallOption) (*Merchant, error)
@@ -70,6 +71,16 @@ func (c *merchantService) FindOneByID(ctx context.Context, in *MerchantID, opts 
 
 func (c *merchantService) FindOneByEmail(ctx context.Context, in *MerchantEmail, opts ...client.CallOption) (*Merchant, error) {
 	req := c.c.NewRequest(c.name, "MerchantService.FindOneByEmail", in)
+	out := new(Merchant)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *merchantService) FindOneBySlug(ctx context.Context, in *MerchantSlug, opts ...client.CallOption) (*Merchant, error) {
+	req := c.c.NewRequest(c.name, "MerchantService.FindOneBySlug", in)
 	out := new(Merchant)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -167,6 +178,7 @@ func (c *merchantService) Delete(ctx context.Context, in *MerchantID, opts ...cl
 type MerchantServiceHandler interface {
 	FindOneByID(context.Context, *MerchantID, *Merchant) error
 	FindOneByEmail(context.Context, *MerchantEmail, *Merchant) error
+	FindOneBySlug(context.Context, *MerchantSlug, *Merchant) error
 	FindAll(context.Context, *emptypb.Empty, MerchantService_FindAllStream) error
 	Create(context.Context, *MerchantCreateReq, *Merchant) error
 	Update(context.Context, *MerchantUpdateReq, *Merchant) error
@@ -177,6 +189,7 @@ func RegisterMerchantServiceHandler(s server.Server, hdlr MerchantServiceHandler
 	type merchantService interface {
 		FindOneByID(ctx context.Context, in *MerchantID, out *Merchant) error
 		FindOneByEmail(ctx context.Context, in *MerchantEmail, out *Merchant) error
+		FindOneBySlug(ctx context.Context, in *MerchantSlug, out *Merchant) error
 		FindAll(ctx context.Context, stream server.Stream) error
 		Create(ctx context.Context, in *MerchantCreateReq, out *Merchant) error
 		Update(ctx context.Context, in *MerchantUpdateReq, out *Merchant) error
@@ -199,6 +212,10 @@ func (h *merchantServiceHandler) FindOneByID(ctx context.Context, in *MerchantID
 
 func (h *merchantServiceHandler) FindOneByEmail(ctx context.Context, in *MerchantEmail, out *Merchant) error {
 	return h.MerchantServiceHandler.FindOneByEmail(ctx, in, out)
+}
+
+func (h *merchantServiceHandler) FindOneBySlug(ctx context.Context, in *MerchantSlug, out *Merchant) error {
+	return h.MerchantServiceHandler.FindOneBySlug(ctx, in, out)
 }
 
 func (h *merchantServiceHandler) FindAll(ctx context.Context, stream server.Stream) error {

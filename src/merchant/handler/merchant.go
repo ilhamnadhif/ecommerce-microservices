@@ -39,9 +39,13 @@ func (service *MerchantServiceHandler) FindOneByID(ctx context.Context, id *pb.M
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
-		Name:      merchantResp.Name,
 		Email:     merchantResp.Email,
 		Password:  merchantResp.Password,
+		Name:      merchantResp.Name,
+		Slug:      merchantResp.Slug,
+		Balance:   int64(merchantResp.Balance),
+		ImageID:   int64(merchantResp.ImageID),
+		Image:     merchantResp.Image,
 		CreatedAt: timestamppb.New(merchantResp.CreatedAt),
 		UpdatedAt: timestamppb.New(merchantResp.UpdatedAt),
 	}
@@ -60,9 +64,38 @@ func (service *MerchantServiceHandler) FindOneByEmail(ctx context.Context, email
 	}
 	*merchant = pb.Merchant{
 		ID:        int64(merchantResp.ID),
-		Name:      merchantResp.Name,
 		Email:     merchantResp.Email,
 		Password:  merchantResp.Password,
+		Name:      merchantResp.Name,
+		Slug:      merchantResp.Slug,
+		Balance:   int64(merchantResp.Balance),
+		ImageID:   int64(merchantResp.ImageID),
+		Image:     merchantResp.Image,
+		CreatedAt: timestamppb.New(merchantResp.CreatedAt),
+		UpdatedAt: timestamppb.New(merchantResp.UpdatedAt),
+	}
+	return nil
+}
+
+func (service *MerchantServiceHandler) FindOneBySlug(ctx context.Context, slug *pb.MerchantSlug, merchant *pb.Merchant) error {
+	merchantResp, err := service.MerchantRepository.FindOneByEmail(ctx, service.DB, slug.)
+	if err != nil {
+		logrus.Error(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors2.NotFound("", err.Error())
+		} else {
+			return errors2.BadRequest("", err.Error())
+		}
+	}
+	*merchant = pb.Merchant{
+		ID:        int64(merchantResp.ID),
+		Email:     merchantResp.Email,
+		Password:  merchantResp.Password,
+		Name:      merchantResp.Name,
+		Slug:      merchantResp.Slug,
+		Balance:   int64(merchantResp.Balance),
+		ImageID:   int64(merchantResp.ImageID),
+		Image:     merchantResp.Image,
 		CreatedAt: timestamppb.New(merchantResp.CreatedAt),
 		UpdatedAt: timestamppb.New(merchantResp.UpdatedAt),
 	}

@@ -9,24 +9,31 @@ import "google/protobuf/timestamp.proto";
 
 message Merchant {
   int64 ID = 1;
-  string Name = 2;
-  string Email = 3;
-  string Password = 4;
-  google.protobuf.Timestamp CreatedAt = 5;
-  google.protobuf.Timestamp UpdatedAt = 6;
+  string Email = 2;
+  string Password = 3;
+  string Name = 4;
+  string Slug = 5;
+  int64 Balance = 6;
+  int64 ImageID = 7;
+  string Image = 8;
+  google.protobuf.Timestamp CreatedAt = 9;
+  google.protobuf.Timestamp UpdatedAt = 10;
 }
 
 message MerchantCreateReq {
-  string Name = 1;
-  string Email = 2;
-  string Password = 3;
+  string Email = 1;
+  string Password = 2;
+  string Name = 3;
+  int64 ImageID = 4;
+  string Image = 5;
 }
 
 message MerchantUpdateReq {
   int64 ID = 1;
   string Name = 2;
-  string Email = 3;
-  string Password = 4;
+  int64 Balance = 6;
+  int64 ImageID = 7;
+  string Image = 8;
 }
 
 message MerchantID {
@@ -37,10 +44,14 @@ message MerchantEmail {
   string Email = 1;
 }
 
+message MerchantSlug {
+  string Slug = 1;
+}
 
 service MerchantService {
   rpc FindOneByID(MerchantID) returns (Merchant);
   rpc FindOneByEmail(MerchantEmail) returns (Merchant);
+  rpc FindOneBySlug(MerchantSlug) returns (Merchant);
   rpc FindAll(google.protobuf.Empty) returns (stream Merchant);
   rpc Create(MerchantCreateReq) returns (Merchant);
   rpc Update(MerchantUpdateReq) returns (Merchant);
