@@ -22,6 +22,7 @@ var (
 )
 
 func main() {
+
 	// log
 	file, _ := os.OpenFile(fmt.Sprintf("logs/app_%s.log", time.Now().Format("2006_01_02")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	logrus.SetOutput(file)
